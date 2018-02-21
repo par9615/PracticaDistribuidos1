@@ -31,7 +31,8 @@ int main()
 	gettimeofday(&ts, NULL);
 	start_ts = ts.tv_sec * 1000000 + ts.tv_usec; // Tiempo inicial
 
-
+	#pragma omp parallel
+	#pragma omp single
 	SortArr(arr);
 
 	gettimeofday(&ts, NULL);
@@ -104,23 +105,18 @@ void mergeSort(int *numbers, int l, int r)
 	if(l < r)
 	{		
 		
-	#pragma omp parallel
-	{		
-		
-		#pragma omp single
-		{
-			int m = l+(r-l)/2;
-			#pragma omp task
-			mergeSort(numbers, l, m);	
-			
-			#pragma omp task
-			mergeSort(numbers, m+1, r);	
-
-			#pragma omp taskwait
-			merge(numbers, l, m, r);
-		}
 	
-	}
+		int m = l+(r-l)/2;
+
+		#pragma omp task
+		mergeSort(numbers, l, m);	
+			
+	
+		mergeSort(numbers, m+1, r);	
+
+		#pragma omp taskwait
+		merge(numbers, l, m, r);
+	
 
 		
 		
