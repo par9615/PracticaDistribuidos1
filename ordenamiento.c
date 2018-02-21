@@ -11,7 +11,7 @@ int errors(int *numbers,int elems);
 void initArr(int *numbers,int elems);
 void SortArr(int *numbers);
 void merge(int *numbers, int l, int m, int r);
-void mergeSort(int *numbers, int l, int r);
+void mergeSort(int *numbers, int l, int r, int p);
 
 int arr[ELEMS];
 
@@ -31,8 +31,6 @@ int main()
 	gettimeofday(&ts, NULL);
 	start_ts = ts.tv_sec * 1000000 + ts.tv_usec; // Tiempo inicial
 
-	#pragma omp parallel
-	#pragma omp single
 	SortArr(arr);
 
 	gettimeofday(&ts, NULL);
@@ -67,8 +65,9 @@ int errors(int *numbers,int elems)
  
 void SortArr(int *numbers)
 {
-
-	mergeSort(numbers, 0, ELEMS-1);
+	#pragma omp parallel
+	#pragma omp single
+	mergeSort(numbers, 0, ELEMS-1, 1);
 }
 
 void merge(int *numbers, int l, int m, int r)
@@ -82,7 +81,7 @@ void merge(int *numbers, int l, int m, int r)
 
 	while((i<=m) && (j<=r))
 	{
-		if(numbers[i] < numbers[j])
+		if(numbers[i] < numbers[j]) 
 			aux[k++] = numbers[i++];
 		else
 			aux[k++] = numbers[j++];
@@ -99,27 +98,22 @@ void merge(int *numbers, int l, int m, int r)
 	free(aux);
 }
 
-void mergeSort(int *numbers, int l, int r)
+void mergeSort(int *numbers, int l, int r, int p)
 {
+	
 
 	if(l < r)
 	{		
-		
-	
-		int m = l+(r-l)/2;
-
-		#pragma omp task
-		mergeSort(numbers, l, m);	
 			
+		int m = l+(r-l)/2;
 	
-		mergeSort(numbers, m+1, r);	
-
+		#pragma omp task if(p < 2)
+		mergeSort(numbers, l, m, p+1);	
+		
+		mergeSort(numbers, m+1, r, p+1);
+		
 		#pragma omp taskwait
-		merge(numbers, l, m, r);
-	
-
-		
-		
+		merge(numbers, l, m, r);	
 	
 	}
 }
